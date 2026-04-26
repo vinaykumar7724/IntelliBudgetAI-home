@@ -1,0 +1,254 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>📊 Dashboard</h2>
+
+<h5 class="mb-3 text-muted">
+    Showing data for
+    {% if filter_mode == 'range' %}
+        {{ from_date }} to {{ to_date }}
+    {% else %}
+        {{ selected_month.strftime('%B %Y') }}
+    {% endif %}
+</h5>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     FEATURE 2 — Date Range Filter
+     ═══════════════════════════════════════════════════════════════ -->
+<div class="card mb-4 shadow-sm">
+    <div class="card-header bg-white fw-bold">📅 Filter Expenses</div>
+    <div class="card-body">
+
+        <!-- Tab buttons -->
+        <div class="btn-group mb-3" role="group">
+            <button type="button"
+                    class="btn btn-sm {{ 'btn-primary' if filter_mode != 'range' else 'btn-outline-primary' }}"
+                    onclick="document.getElementById('monthlyForm').classList.remove('d-none');
+                             document.getElementById('rangeForm').classList.add('d-none');">
+                Monthly View
+            </button>
+            <button type="button"
+                    class="btn btn-sm {{ 'btn-primary' if filter_mode == 'range' else 'btn-outline-primary' }}"
+                    onclick="document.getElementById('rangeForm').classList.remove('d-none');
+                             document.getElementById('monthlyForm').classList.add('d-none');">
+                Custom Date Range
+            </button>
+        </div>
+
+        <!-- Monthly filter (existing) -->
+        <form method="get" id="monthlyForm"
+              class="row gy-2 gx-3 align-items-center
+                     {{ 'd-none' if filter_mode == 'range' }}">
+            <div class="col-auto">
+                <label class="form-label mb-0 small fw-semibold">Month</label>
+                <input type="number" name="month" class="form-control form-control-sm"
+                       placeholder="MM" min="1" max="12"
+                       value="{{ selected_month.month }}">
+            </div>
+            <div class="col-auto">
+                <label class="form-label mb-0 small fw-semibold">Year</label>
+                <input type="number" name="year" class="form-control form-control-sm"
+                       placeholder="YYYY" value="{{ selected_month.year }}">
+            </div>
+            <div class="col-auto mt-3">
+                <button type="submit" class="btn btn-secondary btn-sm">Apply</button>
+            </div>
+        </form>
+
+        <!-- Custom date range filter (Feature 2) -->
+        <form method="get" id="rangeForm"
+              class="row gy-2 gx-3 align-items-center
+                     {{ '' if filter_mode == 'range' else 'd-none' }}">
+            <div class="col-auto">
+                <label class="form-label mb-0 small fw-semibold">From Date</label>
+                <input type="date" name="from_date" class="form-control form-control-sm"
+                       value="{{ from_date }}" required>
+            </div>
+            <div class="col-auto">
+                <label class="form-label mb-0 small fw-semibold">To Date</label>
+                <input type="date" name="to_date" class="form-control form-control-sm"
+                       value="{{ to_date }}" required>
+            </div>
+            <div class="col-auto mt-3">
+                <button type="submit" class="btn btn-primary btn-sm">Apply Range</button>
+            </div>
+            <div class="col-auto mt-3">
+                <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary btn-sm">
+                    Reset
+                </a>
+            </div>
+        </form>
+
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     Summary Cards
+     ═══════════════════════════════════════════════════════════════ -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card mb-3 shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title">💸 Total Expenses</h5>
+                <p class="h4 text-danger fw-bold">₹{{ "%.2f"|format(total) }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card mb-3 shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title">💰 Remaining Salary</h5>
+                <p class="h4 fw-bold {{ 'text-success' if remaining >= 0 else 'text-danger' }}">
+                    ₹{{ "%.2f"|format(remaining) }}
+                </p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card mb-3 shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title">📁 Export Data</h5>
+                <div class="d-flex gap-2">
+                    <!-- Existing CSV export -->
+                    <a href="{{ url_for('export_csv') }}" class="btn btn-secondary btn-sm">
+                        📄 CSV
+                    </a>
+                    <!-- Feature 3 — PDF Export -->
+                    <a href="{{ url_for('export_pdf') }}?from_date={{ from_date }}&to_date={{ to_date }}"
+                       class="btn btn-danger btn-sm">
+                        🗒️ PDF Report
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     Budget Warning
+     ═══════════════════════════════════════════════════════════════ -->
+{% if over_budget %}
+<div class="alert alert-warning shadow-sm" role="alert">
+    <strong>⚠️ Budget Exceeded!</strong>
+    You have gone over budget in:
+    <strong>{{ over_budget | join(', ') }}</strong>
+</div>
+{% endif %}
+
+<!-- ═══════════════════════════════════════════════════════════════
+     Charts
+     ═══════════════════════════════════════════════════════════════ -->
+<div class="row mt-2">
+    <div class="col-md-6">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-white fw-bold">🥧 Expenses by Category</div>
+            <div class="card-body">
+                <canvas id="pieChart"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-white fw-bold">📊 Monthly Breakdown</div>
+            <div class="card-body">
+                <canvas id="barChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     Expense Table (shows filtered results)
+     ═══════════════════════════════════════════════════════════════ -->
+{% if expenses %}
+<div class="card shadow-sm mb-4">
+    <div class="card-header bg-white fw-bold">
+        🧾 Expense Details
+        <span class="badge bg-secondary ms-2">{{ expenses|length }} records</span>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-striped table-hover mb-0">
+            <thead class="table-dark">
+                <tr>
+                    <th>Date</th>
+                    <th>Category</th>
+                    <th>Description</th>
+                    <th class="text-end">Amount</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for e in expenses %}
+                <tr>
+                    <td>{{ e.date.strftime('%d %b %Y') }}</td>
+                    <td><span class="badge bg-primary">{{ e.category }}</span></td>
+                    <td>{{ e.description or '—' }}</td>
+                    <td class="text-end fw-semibold">₹{{ "%.2f"|format(e.amount) }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            <tfoot class="table-light">
+                <tr>
+                    <td colspan="3" class="fw-bold text-end">Total</td>
+                    <td class="text-end fw-bold text-danger">₹{{ "%.2f"|format(total) }}</td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+</div>
+{% else %}
+<div class="alert alert-info">No expenses found for the selected period.</div>
+{% endif %}
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+window.chartData = JSON.parse('{{ breakdown|tojson|safe }}');
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var data   = window.chartData || {};
+    var labels = Object.keys(data);
+    var values = Object.values(data);
+
+    var bgColors = [
+        '#007bff','#28a745','#ffc107','#dc3545',
+        '#17a2b8','#fd7e14','#6f42c1','#20c997'
+    ];
+
+    if (labels.length > 0) {
+        // Pie chart
+        new Chart(document.getElementById('pieChart'), {
+            type: 'pie',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: values,
+                    backgroundColor: bgColors
+                }]
+            },
+            options: {
+                plugins: { legend: { position: 'bottom' } }
+            }
+        });
+
+        // Bar chart
+        new Chart(document.getElementById('barChart'), {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Amount (₹)',
+                    data: values,
+                    backgroundColor: '#17a2b8'
+                }]
+            },
+            options: {
+                plugins: { legend: { display: false } },
+                scales: { y: { beginAtZero: true } }
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

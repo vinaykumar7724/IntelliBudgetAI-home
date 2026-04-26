@@ -1,0 +1,118 @@
+/* custom styles */
+
+#chat-container .badge {
+    border-radius: 1rem;
+    padding: 0.5rem 1rem;
+}
+
+/* =========================
+   Global Styling
+========================= */
+
+body{
+    background:#f7f6fb;
+    color:#333;
+}
+
+/* =========================
+   Navbar
+========================= */
+
+.navbar{
+    background:#734f9a !important;
+    box-shadow:0 4px 12px rgba(115,79,154,0.35);
+}
+
+.navbar-brand{
+    font-weight:600;
+}
+
+.nav-link{
+    color:white !important;
+}
+
+.nav-link:hover{
+    opacity:0.8;
+}
+
+/* =========================
+   Cards (Dashboard)
+========================= */
+
+.card{
+    border:none;
+    border-radius:12px;
+    box-shadow:0 6px 18px rgba(115,79,154,0.18);
+    transition:0.2s;
+}
+
+.card:hover{
+    transform:translateY(-2px);
+}
+
+/* =========================
+   Buttons
+========================= */
+
+.btn-primary{
+    background:#734f9a;
+    border:none;
+    border-radius:8px;
+}
+
+.btn-primary:hover{
+    background:#5f3d84;
+}
+
+/* =========================
+   Forms
+========================= */
+
+.form-control{
+    border-radius:8px;
+}
+
+.form-control:focus{
+    border-color:#734f9a;
+    box-shadow:0 0 6px rgba(115,79,154,0.25);
+}
+
+/* =========================
+   Charts
+========================= */
+
+canvas{
+    background:white;
+    border-radius:12px;
+    padding:10px;
+    box-shadow:0 4px 14px rgba(115,79,154,0.15);
+}
+
+/* =========================
+   Chatbot
+========================= */
+
+#chat-container{
+    background:white;
+    padding:20px;
+    border-radius:12px;
+    box-shadow:0 6px 20px rgba(115,79,154,0.18);
+}
+
+#chat-container .badge{
+    border-radius:1rem;
+    padding:0.5rem 1rem;
+}
+
+#chat-container .badge.bg-primary{
+    background-color:#8f72ae !important;
+    box-shadow:0 3px 8px rgba(115,79,154,0.25);
+}
+
+/* =========================
+   Alerts
+========================= */
+
+.alert{
+    border-radius:8px;
+}
